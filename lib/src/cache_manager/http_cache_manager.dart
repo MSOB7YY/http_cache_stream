@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:http_cache_stream/src/cache_manager/http_cache_server.dart';
 import 'package:http_cache_stream/src/models/config/stream_cache_config.dart';
 import 'package:http_cache_stream/src/models/metadata/cache_files.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
 import '../../http_cache_stream.dart';
 import '../etc/const.dart';
@@ -136,7 +134,7 @@ class HttpCacheManager {
     return '${uri.path}?${uri.query}';
   }
 
-  static Future<HttpCacheManager> init({Directory? cacheDir}) async {
+  static Future<HttpCacheManager> init({GlobalCacheConfig? config}) async {
     if (_instance != null) {
       return instance;
     }
@@ -145,14 +143,11 @@ class HttpCacheManager {
     }
     _initCompleter = Completer<HttpCacheManager>();
     try {
-      cacheDir ??= Directory(
-        p.join((await getTemporaryDirectory()).path, _kCacheDirName),
-      );
-      final httpCacheConfig = GlobalCacheConfig(cacheDir);
+      config ??= await DefaultGlobalCacheConfig.create();
       final httpCacheServer = await HttpCacheServer.init();
       final httpCacheManager = HttpCacheManager._(
         httpCacheServer,
-        httpCacheConfig,
+        config,
       );
       _instance = httpCacheManager;
       _initCompleter!.complete(httpCacheManager);
@@ -178,5 +173,3 @@ class HttpCacheManager {
   static HttpCacheManager? _instance;
   static bool get isInitialized => _instance != null;
 }
-
-const _kCacheDirName = 'http_cache_stream';

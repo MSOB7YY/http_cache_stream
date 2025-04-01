@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart' as pp;
+
 abstract interface class CacheConfiguration {
   ///Custom headers to be sent when downloading cache.
   Map<String, Object> get requestHeaders;
@@ -86,6 +89,10 @@ sealed class CacheConfig implements CacheConfiguration {
   int _minChunkSize = 1024 * 64; // 64KB
 }
 
+class LocalCacheConfig extends CacheConfig {
+  LocalCacheConfig();
+}
+
 class GlobalCacheConfig extends CacheConfig {
   ///The directory where the cache is stored. This can only be set during initialization.
   /// The cache directory must be writable and accessible by the application.
@@ -94,6 +101,14 @@ class GlobalCacheConfig extends CacheConfig {
   GlobalCacheConfig(this.cacheDirectory);
 }
 
-class LocalCacheConfig extends CacheConfig {
-  LocalCacheConfig();
+class DefaultGlobalCacheConfig extends GlobalCacheConfig {
+  DefaultGlobalCacheConfig._(super.cacheDirectory);
+
+  static const _kCacheDirName = 'http_cache_stream';
+
+  static Future<DefaultGlobalCacheConfig> create() async {
+    final appTempDirectory = (await pp.getTemporaryDirectory()).path;
+    final cacheDirPath = p.join(appTempDirectory, _kCacheDirName);
+    return DefaultGlobalCacheConfig._(Directory(cacheDirPath));
+  }
 }
