@@ -22,7 +22,7 @@ class HttpCacheManager {
   ///Create a [HttpCacheStream] instance for the given URL. If an instance already exists, the existing instance will be returned.
   ///
   ///Use [File] to specify the output file to save the downloaded content to. If not provided, a file will be created in the cache directory (recommended).
-  HttpCacheStream createStream(Uri sourceUrl, {File? file}) {
+  HttpCacheStream createStream(Uri sourceUrl, {File? file, void Function(File cachedFile)? onCacheDone}) {
     final key = _requestKey(sourceUrl);
     HttpCacheStream? httpCacheStream = _streams[key];
     if (httpCacheStream != null) {
@@ -35,6 +35,7 @@ class HttpCacheManager {
         cacheUrl,
         cacheFiles,
         StreamCacheConfig(config),
+        onCacheDone: onCacheDone,
       );
       httpCacheStream.future.whenComplete(
         () => _streams.remove(key),
