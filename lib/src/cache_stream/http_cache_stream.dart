@@ -21,6 +21,9 @@ class HttpCacheStream {
   ///The Url of the cached stream (e.g., http://127.0.0.1:8080/file.mp3)
   final Uri cacheUrl;
 
+  ///A callback to be called the first time a stream is fully cached.
+  final void Function(File cachedFile)? onCacheDone;
+
   final CacheFiles _cacheFiles;
 
   final StreamCacheConfig config;
@@ -39,8 +42,9 @@ class HttpCacheStream {
     this.sourceUrl,
     this.cacheUrl,
     this._cacheFiles,
-    this.config,
-  ) {
+    this.config, {
+    this.onCacheDone,
+  }) {
     final cachedHeaders = metadata.headers;
     if (cachedHeaders == null || cachedHeaders.sourceLength == null) return;
     if (_updateCacheProgress() == 1.0 && config.validateOutdatedCache && cachedHeaders.shouldRevalidate()) {
@@ -153,6 +157,7 @@ class HttpCacheStream {
               );
             }
             await metadata.partialCacheFile.rename(cacheFile.path);
+            onCacheDone?.call(cacheFile);
           },
           onProgress: (percentage) {
             //Limit to 99% to prevent 100% progress before write is complete
