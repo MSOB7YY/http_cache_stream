@@ -100,6 +100,9 @@ class CacheDownloader {
               _sourceLength ??=
                   (_downloader.isDone ? _downloader.position : null);
           if (bufferedCacheLength == sourceLength) {
+            await _sink.close();
+            await _streamController.close();
+            await cancel();
             await onComplete();
           } else if (bufferedCacheLength != downloadPosition) {
             throw InvalidCacheLengthException(
@@ -115,6 +118,7 @@ class CacheDownloader {
           }
           _sink.close().ignore();
           _streamController.close().ignore();
+          cancel().ignore();
         });
   }
 
